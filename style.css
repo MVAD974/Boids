@@ -35,6 +35,11 @@ canvas {
     width: 150px;
 }
 
+.control input[type="checkbox"] {
+    width: auto;
+    margin-left: auto;
+}
+
 .control span {
     width: 30px;
     text-align: right;

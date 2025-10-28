@@ -14,6 +14,7 @@ export class Boid {
     velocity: Vector;
     acceleration: Vector;
     maxForce = 0.1;
+    debug = false;
 
     constructor() {
         this.position = new Vector(Math.random() * window.innerWidth, Math.random() * window.innerHeight);
@@ -129,7 +130,7 @@ export class Boid {
         }
     }
 
-    draw(ctx: CanvasRenderingContext2D) {
+    draw(ctx: CanvasRenderingContext2D, controls: Controls, boids: Boid[]) {
         ctx.save();
         ctx.translate(this.position.x, this.position.y);
         ctx.rotate(this.velocity.heading());
@@ -138,8 +139,53 @@ export class Boid {
         ctx.lineTo(-5, -5);
         ctx.lineTo(-5, 5);
         ctx.closePath();
-        ctx.fillStyle = '#ddd';
+        ctx.fillStyle = this.debug ? 'red' : '#ddd';
         ctx.fill();
         ctx.restore();
+
+        if (this.debug) {
+            ctx.save();
+            ctx.translate(this.position.x, this.position.y);
+
+            // Draw perception radius
+            ctx.beginPath();
+            ctx.arc(0, 0, controls.perception, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.stroke();
+
+            // Draw field of view
+            ctx.save();
+            ctx.rotate(this.velocity.heading());
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.arc(0, 0, controls.perception, -controls.fov / 2 * (Math.PI / 180), controls.fov / 2 * (Math.PI / 180));
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.fill();
+            ctx.restore();
+
+            // Draw line to closest boid
+            let closest: Boid | null = null;
+            let closestDist = Infinity;
+            for (let other of boids) {
+                if (other !== this) {
+                    let d = this.position.dist(other.position);
+                    if (d < closestDist) {
+                        closestDist = d;
+                        closest = other;
+                    }
+                }
+            }
+            if (closest) {
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                const localClosest = Vector.sub(closest.position, this.position);
+                ctx.lineTo(localClosest.x, localClosest.y);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                ctx.stroke();
+            }
+
+            ctx.restore();
+        }
     }
 }

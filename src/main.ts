@@ -28,6 +28,7 @@ const cohesionValue = document.getElementById('cohesion-value') as HTMLSpanEleme
 const separationValue = document.getElementById('separation-value') as HTMLSpanElement;
 const perceptionValue = document.getElementById('perception-value') as HTMLSpanElement;
 const fovValue = document.getElementById('fov-value') as HTMLSpanElement;
+const debugToggle = document.getElementById('debug') as HTMLInputElement;
 
 speedSlider.addEventListener('input', (e) => {
     controls.speed = parseFloat((e.target as HTMLInputElement).value);
@@ -53,6 +54,10 @@ fovSlider.addEventListener('input', (e) => {
     controls.fov = parseFloat((e.target as HTMLInputElement).value);
     fovValue.textContent = controls.fov.toString();
 });
+debugToggle.addEventListener('change', (e) => {
+    const specialBoid = flock[0];
+    specialBoid.debug = (e.target as HTMLInputElement).checked;
+});
 
 
 const flock: Boid[] = [];
@@ -66,7 +71,7 @@ function animate() {
 
     for (let boid of flock) {
         boid.update(flock, controls);
-        boid.draw(ctx);
+        boid.draw(ctx, controls, flock);
     }
 
     requestAnimationFrame(animate);

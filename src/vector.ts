@@ -59,6 +59,13 @@ export class Vector {
         return Math.sqrt(dx * dx + dy * dy);
     }
 
+    angleBetween(v: Vector) {
+        const dot = this.x * v.x + this.y * v.y;
+        const mag1 = this.mag();
+        const mag2 = v.mag();
+        return Math.acos(dot / (mag1 * mag2));
+    }
+
     static sub(v1: Vector, v2: Vector): Vector {
         return new Vector(v1.x - v2.x, v1.y - v2.y);
     }

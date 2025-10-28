@@ -2,8 +2,40 @@ body {
     margin: 0;
     overflow: hidden;
     background-color: #222;
+    font-family: sans-serif;
+    color: #ddd;
 }
 
 canvas {
     display: block;
+}
+
+#controls {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.control {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.control label {
+    margin-right: 10px;
+    width: 120px;
+}
+
+.control input {
+    width: 150px;
+}
+
+.control span {
+    width: 30px;
+    text-align: right;
 }

@@ -1,12 +1,19 @@
 import { Vector } from './vector';
 
+interface Controls {
+    speed: number;
+    alignment: number;
+    cohesion: number;
+    separation: number;
+    perception: number;
+    fov: number;
+}
+
 export class Boid {
     position: Vector;
     velocity: Vector;
     acceleration: Vector;
-    maxSpeed = 4;
     maxForce = 0.1;
-    perceptionRadius = 50;
 
     constructor() {
         this.position = new Vector(Math.random() * window.innerWidth, Math.random() * window.innerHeight);
@@ -15,82 +22,95 @@ export class Boid {
         this.acceleration = new Vector(0, 0);
     }
 
-    align(boids: Boid[]): Vector {
+    align(boids: Boid[], controls: Controls): Vector {
         let steering = new Vector(0, 0);
         let total = 0;
         for (let other of boids) {
             let d = this.position.dist(other.position);
-            if (other !== this && d < this.perceptionRadius) {
-                steering.add(other.velocity);
-                total++;
+            if (other !== this && d < controls.perception) {
+                const angle = this.velocity.angleBetween(Vector.sub(other.position, this.position));
+                if (angle < (controls.fov / 2) * (Math.PI / 180)) {
+                    steering.add(other.velocity);
+                    total++;
+                }
             }
         }
         if (total > 0) {
             steering.div(total);
-            steering.setMag(this.maxSpeed);
+            steering.setMag(controls.speed);
             steering.sub(this.velocity);
             steering.limit(this.maxForce);
         }
         return steering;
     }
 
-    cohesion(boids: Boid[]): Vector {
+    cohesion(boids: Boid[], controls: Controls): Vector {
         let steering = new Vector(0, 0);
         let total = 0;
         for (let other of boids) {
             let d = this.position.dist(other.position);
-            if (other !== this && d < this.perceptionRadius) {
-                steering.add(other.position);
-                total++;
+            if (other !== this && d < controls.perception) {
+                const angle = this.velocity.angleBetween(Vector.sub(other.position, this.position));
+                if (angle < (controls.fov / 2) * (Math.PI / 180)) {
+                    steering.add(other.position);
+                    total++;
+                }
             }
         }
         if (total > 0) {
             steering.div(total);
             steering.sub(this.position);
-            steering.setMag(this.maxSpeed);
+            steering.setMag(controls.speed);
             steering.sub(this.velocity);
             steering.limit(this.maxForce);
         }
         return steering;
     }
 
-    separation(boids: Boid[]): Vector {
+    separation(boids: Boid[], controls: Controls): Vector {
         let steering = new Vector(0, 0);
         let total = 0;
         for (let other of boids) {
             let d = this.position.dist(other.position);
-            if (other !== this && d < this.perceptionRadius) {
-                let diff = Vector.sub(this.position, other.position);
-                diff.div(d * d);
-                steering.add(diff);
-                total++;
+            if (other !== this && d < controls.perception) {
+                const angle = this.velocity.angleBetween(Vector.sub(other.position, this.position));
+                if (angle < (controls.fov / 2) * (Math.PI / 180)) {
+                    let diff = Vector.sub(this.position, other.position);
+                    diff.div(d * d);
+                    steering.add(diff);
+                    total++;
+                }
             }
         }
         if (total > 0) {
             steering.div(total);
-            steering.setMag(this.maxSpeed);
+            steering.setMag(controls.speed);
             steering.sub(this.velocity);
             steering.limit(this.maxForce);
         }
         return steering;
     }
 
-    flock(boids: Boid[]) {
-        let alignment = this.align(boids);
-        let cohesion = this.cohesion(boids);
-        let separation = this.separation(boids);
+    flock(boids: Boid[], controls: Controls) {
+        let alignment = this.align(boids, controls);
+        let cohesion = this.cohesion(boids, controls);
+        let separation = this.separation(boids, controls);
+
+        alignment.mult(controls.alignment);
+        cohesion.mult(controls.cohesion);
+        separation.mult(controls.separation);
 
         this.acceleration.add(alignment);
         this.acceleration.add(cohesion);
         this.acceleration.add(separation);
     }
 
-    update(boids: Boid[]) {
-        this.flock(boids);
+    update(boids: Boid[], controls: Controls) {
+        this.flock(boids, controls);
 
         this.position.add(this.velocity);
         this.velocity.add(this.acceleration);
-        this.velocity.limit(this.maxSpeed);
+        this.velocity.limit(controls.speed);
         this.acceleration.mult(0);
 
         this.edges();

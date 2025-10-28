@@ -7,6 +7,7 @@ interface Controls {
     separation: number;
     perception: number;
     fov: number;
+    confine: boolean;
 }
 
 export class Boid {
@@ -114,7 +115,11 @@ export class Boid {
         this.velocity.limit(controls.speed);
         this.acceleration.mult(0);
 
-        this.edges();
+        if (controls.confine) {
+            this.confine();
+        } else {
+            this.edges();
+        }
     }
 
     edges() {
@@ -127,6 +132,23 @@ export class Boid {
             this.position.y = 0;
         } else if (this.position.y < 0) {
             this.position.y = window.innerHeight;
+        }
+    }
+
+    confine() {
+        const margin = 100;
+        const turnForce = 0.2;
+
+        if (this.position.x < margin) {
+            this.acceleration.add(new Vector(turnForce, 0));
+        } else if (this.position.x > window.innerWidth - margin) {
+            this.acceleration.add(new Vector(-turnForce, 0));
+        }
+
+        if (this.position.y < margin) {
+            this.acceleration.add(new Vector(0, turnForce));
+        } else if (this.position.y > window.innerHeight - margin) {
+            this.acceleration.add(new Vector(0, -turnForce));
         }
     }
 

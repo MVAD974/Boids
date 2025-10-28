@@ -118,7 +118,7 @@ export class Boid {
         ctx.lineTo(-5, -5);
         ctx.lineTo(-5, 5);
         ctx.closePath();
-        ctx.fillStyle = 'white';
+        ctx.fillStyle = '#ddd';
         ctx.fill();
         ctx.restore();
     }

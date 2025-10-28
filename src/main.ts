@@ -1,4 +1,5 @@
 import { Boid } from './boid';
+import { Predator } from './predator';
 
 const canvas = document.getElementById('simulationCanvas') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d')!;
@@ -13,7 +14,9 @@ const controls = {
     separation: 1,
     perception: 50,
     fov: 360,
-    confine: false
+    confine: false,
+    fleeRadius: 100,
+    fleeForce: 1.5
 };
 
 const speedSlider = document.getElementById('speed') as HTMLInputElement;
@@ -24,6 +27,8 @@ const perceptionSlider = document.getElementById('perception') as HTMLInputEleme
 const fovSlider = document.getElementById('fov') as HTMLInputElement;
 const debugToggle = document.getElementById('debug') as HTMLInputElement;
 const confineToggle = document.getElementById('confine') as HTMLInputElement;
+const fleeRadiusSlider = document.getElementById('flee-radius') as HTMLInputElement;
+const fleeForceSlider = document.getElementById('flee-force') as HTMLInputElement;
 
 const classicBtn = document.getElementById('classic') as HTMLButtonElement;
 const coordinatedBtn = document.getElementById('coordinated') as HTMLButtonElement;
@@ -39,6 +44,8 @@ const cohesionValue = document.getElementById('cohesion-value') as HTMLSpanEleme
 const separationValue = document.getElementById('separation-value') as HTMLSpanElement;
 const perceptionValue = document.getElementById('perception-value') as HTMLSpanElement;
 const fovValue = document.getElementById('fov-value') as HTMLSpanElement;
+const fleeRadiusValue = document.getElementById('flee-radius-value') as HTMLSpanElement;
+const fleeForceValue = document.getElementById('flee-force-value') as HTMLSpanElement;
 
 function updateSliders() {
     speedSlider.value = controls.speed.toString();
@@ -53,6 +60,10 @@ function updateSliders() {
     perceptionValue.textContent = controls.perception.toString();
     fovSlider.value = controls.fov.toString();
     fovValue.textContent = controls.fov.toString();
+    fleeRadiusSlider.value = controls.fleeRadius.toString();
+    fleeRadiusValue.textContent = controls.fleeRadius.toString();
+    fleeForceSlider.value = controls.fleeForce.toString();
+    fleeForceValue.textContent = controls.fleeForce.toString();
 }
 
 toggleControlsBtn.addEventListener('click', () => {
@@ -66,6 +77,8 @@ classicBtn.addEventListener('click', () => {
     controls.separation = 1;
     controls.perception = 50;
     controls.fov = 360;
+    controls.fleeRadius = 100;
+    controls.fleeForce = 1.5;
     updateSliders();
 });
 
@@ -76,6 +89,8 @@ coordinatedBtn.addEventListener('click', () => {
     controls.separation = 0.5;
     controls.perception = 100;
     controls.fov = 270;
+    controls.fleeRadius = 100;
+    controls.fleeForce = 1.5;
     updateSliders();
 });
 
@@ -86,6 +101,8 @@ scatteredBtn.addEventListener('click', () => {
     controls.separation = 2;
     controls.perception = 20;
     controls.fov = 360;
+    controls.fleeRadius = 100;
+    controls.fleeForce = 1.5;
     updateSliders();
 });
 
@@ -96,6 +113,8 @@ nervousBtn.addEventListener('click', () => {
     controls.separation = 2;
     controls.perception = 70;
     controls.fov = 180;
+    controls.fleeRadius = 100;
+    controls.fleeForce = 1.5;
     updateSliders();
 });
 
@@ -130,9 +149,18 @@ debugToggle.addEventListener('change', (e) => {
 confineToggle.addEventListener('change', (e) => {
     controls.confine = (e.target as HTMLInputElement).checked;
 });
+fleeRadiusSlider.addEventListener('input', (e) => {
+    controls.fleeRadius = parseFloat((e.target as HTMLInputElement).value);
+    fleeRadiusValue.textContent = controls.fleeRadius.toString();
+});
+fleeForceSlider.addEventListener('input', (e) => {
+    controls.fleeForce = parseFloat((e.target as HTMLInputElement).value);
+    fleeForceValue.textContent = controls.fleeForce.toString();
+});
 
 
 const flock: Boid[] = [];
+const predator = new Predator();
 
 for (let i = 0; i < 100; i++) {
     flock.push(new Boid());
@@ -141,8 +169,11 @@ for (let i = 0; i < 100; i++) {
 function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    predator.update(flock, controls);
+    predator.draw(ctx);
+
     for (let boid of flock) {
-        boid.update(flock, controls);
+        boid.update(flock, controls, predator);
         boid.draw(ctx, controls, flock);
     }
 

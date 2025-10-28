@@ -1,4 +1,5 @@
 import { Vector } from './vector';
+import { Predator } from './predator';
 
 interface Controls {
     speed: number;
@@ -8,6 +9,8 @@ interface Controls {
     perception: number;
     fov: number;
     confine: boolean;
+    fleeRadius: number;
+    fleeForce: number;
 }
 
 export class Boid {
@@ -93,22 +96,25 @@ export class Boid {
         return steering;
     }
 
-    flock(boids: Boid[], controls: Controls) {
+    flock(boids: Boid[], controls: Controls, predator: Predator) {
         let alignment = this.align(boids, controls);
         let cohesion = this.cohesion(boids, controls);
         let separation = this.separation(boids, controls);
+        let flee = this.flee(predator, controls);
 
         alignment.mult(controls.alignment);
         cohesion.mult(controls.cohesion);
         separation.mult(controls.separation);
+        flee.mult(controls.fleeForce);
 
         this.acceleration.add(alignment);
         this.acceleration.add(cohesion);
         this.acceleration.add(separation);
+        this.acceleration.add(flee);
     }
 
-    update(boids: Boid[], controls: Controls) {
-        this.flock(boids, controls);
+    update(boids: Boid[], controls: Controls, predator: Predator) {
+        this.flock(boids, controls, predator);
 
         this.position.add(this.velocity);
         this.velocity.add(this.acceleration);
@@ -133,6 +139,19 @@ export class Boid {
         } else if (this.position.y < 0) {
             this.position.y = window.innerHeight;
         }
+    }
+
+    flee(predator: Predator, controls: Controls): Vector {
+        let steering = new Vector(0, 0);
+        let d = this.position.dist(predator.position);
+        if (d < controls.fleeRadius) {
+            let diff = Vector.sub(this.position, predator.position);
+            steering.add(diff);
+            steering.setMag(controls.speed);
+            steering.sub(this.velocity);
+            steering.limit(this.maxForce);
+        }
+        return steering;
     }
 
     confine() {
